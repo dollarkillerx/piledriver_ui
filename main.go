@@ -7,7 +7,6 @@ import (
 	_ "github.com/ying32/govcl/pkgs/winappres"
 	"github.com/ying32/govcl/vcl"
 	"github.com/ying32/govcl/vcl/types"
-	"github.com/ying32/govcl/vcl/types/colors"
 )
 
 func main() {
@@ -98,26 +97,39 @@ func (f *TMainForm) fromInit() {
 	passwd.SetBounds(100, 250, 32, 32)
 	passwd.SetParent(f)
 
-	edit := vcl.NewEdit(mainForm)
-	edit.SetParent(mainForm)
+	port := vcl.NewLabel(f)
+	port.SetCaption("本地Socks5监听端口: ")
+	port.SetBounds(60, 400, 32, 32)
+	port.SetParent(f)
+
+	edit := vcl.NewEdit(f)
+	edit.SetParent(f)
 	edit.SetLeft(220)
 	edit.SetTop(150)
 	edit.SetWidth(200)
 	edit.SetTextHint("address")
 
-	edit2 := vcl.NewEdit(mainForm)
-	edit2.SetParent(mainForm)
+	edit2 := vcl.NewEdit(f)
+	edit2.SetParent(f)
 	edit2.SetLeft(220)
 	edit2.SetTop(200)
 	edit2.SetWidth(200)
 	edit2.SetTextHint("user id")
 
-	edit3 := vcl.NewEdit(mainForm)
-	edit3.SetParent(mainForm)
+	edit3 := vcl.NewEdit(f)
+	edit3.SetParent(f)
 	edit3.SetLeft(220)
 	edit3.SetTop(250)
 	edit3.SetWidth(200)
 	edit3.SetTextHint("password")
+
+	edit4 := vcl.NewEdit(f)
+	edit4.SetParent(f)
+	edit4.SetLeft(220)
+	edit4.SetTop(400)
+	edit4.SetWidth(200)
+	edit4.SetTextHint("local socks5 port")
+	edit4.SetText("8081")
 
 	pc1 := vcl.NewRadioButton(f)
 	pc1.SetParent(f)
@@ -145,6 +157,5 @@ func (f *TMainForm) fromInit() {
 	l2 := vcl.NewLabel(f)
 	l2.SetCaption("v0.1")
 	l2.SetAlign(types.AlBottom)
-	l2.SetColor(colors.ClBlack)
 	l2.SetParent(f)
 }
