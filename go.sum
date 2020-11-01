@@ -1,3 +1,5 @@
+github.com/dollarkillerx/processes v0.0.1 h1:eV94UDMLMtXJc4vRxEbm9ZP/8VgIVJ7a3nRSYVRwNfU=
+github.com/dollarkillerx/processes v0.0.1/go.mod h1:LgxcR+R9XlMfSE38MxYyBkV6i8tIaCOz3HBWyV3pGoc=
 github.com/ying32/dylib v0.0.0-20200621115505-e0d4e1c67460 h1:8eP6y2Gm1jle4muu1HsTdIm1Hmy9UbJUmMLBuDrxsnA=
 github.com/ying32/dylib v0.0.0-20200621115505-e0d4e1c67460/go.mod h1:WPBTfbqg/aA1xqHFPB4fgBHETq/G/75yErbnexmaEOo=
 github.com/ying32/govcl v1.2.10 h1:n0Z0DdrzKP6ia1NII4TVDnp0WumQ0X66MvV3NSh9yQk=

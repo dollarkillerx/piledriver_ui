@@ -14,3 +14,7 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 .idea
+ip2region.db
+piledriver.conf
+piledriver.exe
+piledriver_linux

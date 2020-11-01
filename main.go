@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"log"
+	"io/ioutil"
+	"runtime"
 
+	"github.com/dollarkillerx/processes"
 	_ "github.com/ying32/govcl/pkgs/winappres"
 	"github.com/ying32/govcl/vcl"
 	"github.com/ying32/govcl/vcl/types"
@@ -42,6 +45,7 @@ func (f *TMainForm) OnFormCreate(sender vcl.IObject) {
 
 	f.SetOnCloseQuery(func(Sender vcl.IObject, CanClose *bool) {
 		*CanClose = vcl.MessageDlg("是否退出?", types.MtInformation, types.MbYes, types.MbNo) == types.MrYes
+		killPileDriver()
 		fmt.Println("OnCloseQuery")
 	})
 
@@ -77,6 +81,7 @@ func (f *TMainForm) menuInit() {
 	item2.SetShortCutFromString("Ctrl+Q")
 	item2.SetOnClick(func(vcl.IObject) {
 		mainForm.Close()
+		killPileDriver()
 	})
 	item.Add(item2)
 }
@@ -128,8 +133,21 @@ func (f *TMainForm) fromInit() {
 	edit4.SetLeft(220)
 	edit4.SetTop(400)
 	edit4.SetWidth(200)
-	edit4.SetTextHint("local socks5 port")
-	edit4.SetText("8081")
+	edit4.SetTextHint("local socks5 addr")
+	edit4.SetText("0.0.0.0:8081")
+
+	// init config
+	file, err := ioutil.ReadFile("piledriver.conf")
+	if err == nil {
+		cfg := config{}
+		if err := json.Unmarshal(file, &cfg); err == nil {
+			edit.SetText(cfg.Address)
+			edit2.SetText(cfg.UserID)
+			edit3.SetText(cfg.Password)
+			edit4.SetText(cfg.Socks5Addr)
+		}
+	}
+	// config end
 
 	pc1 := vcl.NewRadioButton(f)
 	pc1.SetParent(f)
@@ -149,13 +167,111 @@ func (f *TMainForm) fromInit() {
 	btn.SetBounds(230, 350, 90, 30)
 	btn.SetCaption("action")
 	btn.SetOnClick(func(sender vcl.IObject) {
-		log.Println(pc1.Checked())
-		log.Println(pc2.Checked())
-		log.Println(edit.Text())
+		if edit.Text() == "" || edit2.Text() == "" || edit3.Text() == "" || edit4.Text() == "" {
+			vcl.ShowMessage("What fuck?")
+			return
+		}
+		// 杀死旧进程
+		killPileDriver()
+		// run new process
+		newPileDriver(edit.Text(), edit4.Text(), edit2.Text(), edit3.Text(), pc1.Checked())
+
+		// write config
+		cfg := config{Address: edit.Text(), UserID: edit2.Text(), Password: edit3.Text(), Socks5Addr: edit4.Text()}
+		marshal, err := json.Marshal(cfg)
+		if err == nil {
+			ioutil.WriteFile("piledriver.conf", marshal, 00666)
+		}
+
+		if checkRun() {
+			vcl.ShowMessage("成功启动 如果无法链接说明配置有误 或网络被拦截")
+		}else {
+			vcl.ShowMessage("执行失败 请检测是否配置正确")
+		}
 	})
 
 	l2 := vcl.NewLabel(f)
 	l2.SetCaption("v0.1")
 	l2.SetAlign(types.AlBottom)
 	l2.SetParent(f)
+}
+
+func checkRun() bool {
+	switch runtime.GOOS {
+	case "windows":
+		getPid, err := processes.GetPid("piledriver_core.exe")
+		if err != nil {
+			return false
+		}
+		if getPid != "" {
+			return true
+		}
+	case "linux":
+		getPid, err := processes.GetPid("piledriver_core_linux")
+		if err != nil {
+			return false
+		}
+		if getPid != "" {
+			return true
+		}
+	case "darwin":
+		getPid, err := processes.GetPid("piledriver_core_darwin")
+		if err != nil {
+			return false
+		}
+		if getPid != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func killPileDriver() error {
+	var pid string
+
+	switch runtime.GOOS {
+	case "windows":
+		getPid, err := processes.GetPid("piledriver_core.exe")
+		if err != nil {
+			return err
+		}
+		pid = getPid
+	case "linux":
+		getPid, err := processes.GetPid("piledriver_core_linux")
+		if err != nil {
+			return err
+		}
+		pid = getPid
+	case "darwin":
+		getPid, err := processes.GetPid("piledriver_core_darwin")
+		if err != nil {
+			return err
+		}
+		pid = getPid
+	}
+
+	return processes.KillByPid(pid)
+}
+
+func newPileDriver(addr, socks5, user, password string, pac bool) {
+	switch runtime.GOOS {
+	case "windows":
+		if pac {
+			processes.Command("./core/piledriver_core.exe", addr, socks5, user, password, "pac")
+		} else {
+			processes.Command("./core/piledriver_core.exe", addr, socks5, user, password)
+		}
+	case "linux":
+		if pac {
+			processes.Command("./core/piledriver_core_linux", addr, socks5, user, password, "pac")
+		} else {
+			processes.Command("./core/piledriver_core_linux", addr, socks5, user, password)
+		}
+	case "darwin":
+		if pac {
+			processes.Command("./core/piledriver_core_darwin", addr, socks5, user, password, "pac")
+		} else {
+			processes.Command("./core/piledriver_core_darwin", addr, socks5, user, password)
+		}
+	}
 }
