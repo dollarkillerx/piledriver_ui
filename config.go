@@ -5,4 +5,5 @@ type config struct {
 	UserID     string `json:"user_id"`
 	Password   string `json:"password"`
 	Socks5Addr string `json:"socks_5_addr"`
+	Dns string `json:"dns"`
 }

@@ -104,8 +104,13 @@ func (f *TMainForm) fromInit() {
 
 	port := vcl.NewLabel(f)
 	port.SetCaption("本地Socks5监听端口: ")
-	port.SetBounds(60, 400, 32, 32)
+	port.SetBounds(60, 405, 32, 32)
 	port.SetParent(f)
+
+	dns := vcl.NewLabel(f)
+	dns.SetCaption("PAC DNS: ")
+	dns.SetBounds(100, 455, 32, 32)
+	dns.SetParent(f)
 
 	edit := vcl.NewEdit(f)
 	edit.SetParent(f)
@@ -136,6 +141,14 @@ func (f *TMainForm) fromInit() {
 	edit4.SetTextHint("local socks5 addr")
 	edit4.SetText("0.0.0.0:8081")
 
+	edit5 := vcl.NewEdit(f)
+	edit5.SetParent(f)
+	edit5.SetLeft(220)
+	edit5.SetTop(450)
+	edit5.SetWidth(200)
+	edit5.SetTextHint("pac dns")
+	edit5.SetText("223.5.5.5:53")
+
 	// init config
 	file, err := ioutil.ReadFile("piledriver.conf")
 	if err == nil {
@@ -145,6 +158,7 @@ func (f *TMainForm) fromInit() {
 			edit2.SetText(cfg.UserID)
 			edit3.SetText(cfg.Password)
 			edit4.SetText(cfg.Socks5Addr)
+			edit5.SetText(cfg.Dns)
 		}
 	}
 	// config end
@@ -167,17 +181,17 @@ func (f *TMainForm) fromInit() {
 	btn.SetBounds(230, 350, 90, 30)
 	btn.SetCaption("action")
 	btn.SetOnClick(func(sender vcl.IObject) {
-		if edit.Text() == "" || edit2.Text() == "" || edit3.Text() == "" || edit4.Text() == "" {
+		if edit.Text() == "" || edit2.Text() == "" || edit3.Text() == "" || edit4.Text() == "" || edit5.Text() == "" {
 			vcl.ShowMessage("What fuck?")
 			return
 		}
 		// 杀死旧进程
 		killPileDriver()
 		// run new process
-		newPileDriver(edit.Text(), edit4.Text(), edit2.Text(), edit3.Text(), pc1.Checked())
+		newPileDriver(edit.Text(), edit4.Text(), edit2.Text(), edit3.Text(), pc1.Checked(), edit5.Text())
 
 		// write config
-		cfg := config{Address: edit.Text(), UserID: edit2.Text(), Password: edit3.Text(), Socks5Addr: edit4.Text()}
+		cfg := config{Address: edit.Text(), UserID: edit2.Text(), Password: edit3.Text(), Socks5Addr: edit4.Text(), Dns: edit5.Text()}
 		marshal, err := json.Marshal(cfg)
 		if err == nil {
 			ioutil.WriteFile("piledriver.conf", marshal, 00666)
@@ -185,7 +199,7 @@ func (f *TMainForm) fromInit() {
 
 		if checkRun() {
 			vcl.ShowMessage("成功启动 如果无法链接说明配置有误 或网络被拦截")
-		}else {
+		} else {
 			vcl.ShowMessage("执行失败 请检测是否配置正确")
 		}
 	})
@@ -253,23 +267,23 @@ func killPileDriver() error {
 	return processes.KillByPid(pid)
 }
 
-func newPileDriver(addr, socks5, user, password string, pac bool) {
+func newPileDriver(addr, socks5, user, password string, pac bool, dns string) {
 	switch runtime.GOOS {
 	case "windows":
 		if pac {
-			processes.Command("./core/piledriver_core.exe", addr, socks5, user, password, "pac")
+			processes.Command("./core/piledriver_core.exe", addr, socks5, user, password, dns)
 		} else {
 			processes.Command("./core/piledriver_core.exe", addr, socks5, user, password)
 		}
 	case "linux":
 		if pac {
-			processes.Command("./core/piledriver_core_linux", addr, socks5, user, password, "pac")
+			processes.Command("./core/piledriver_core_linux", addr, socks5, user, password, dns)
 		} else {
 			processes.Command("./core/piledriver_core_linux", addr, socks5, user, password)
 		}
 	case "darwin":
 		if pac {
-			processes.Command("./core/piledriver_core_darwin", addr, socks5, user, password, "pac")
+			processes.Command("./core/piledriver_core_darwin", addr, socks5, user, password, dns)
 		} else {
 			processes.Command("./core/piledriver_core_darwin", addr, socks5, user, password)
 		}
